@@ -9,8 +9,8 @@ function Header() {
             <p className="text-white text-1xl">Look</p>
             </div>
         <div className="justify-between space-x-4 text-lg ">
-        <Link to="/"className="hover:text-blue-600">Movies</Link>
-        <Link to="/Movies"className="hover:text-blue-600">About</Link>
+        <Link to="/"className="hover:text-blue-600">Home</Link>
+        {/* <Link to="/Movies"className="hover:text-blue-600">Movies</Link> */}
          <Link to="/Favorites"className="hover:text-blue-600">Favorites</Link>
           {/* <Link to="/Contacts"className="hover:text-blue-600">Contacts</Link> */}
            
