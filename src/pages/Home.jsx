@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
 import MovieCard from '../Components/MovieCard';
 
-
 function Movies({ onSelect }) {
-  const [movies, setMovies] = useState(["all"]);
+  const [movies, setMovies] = useState([]);
+  const [favorites, setFavorites] = useState([]); // ✅ NEW: favorites state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('avengers');
 
-  const API_KEY = '47857c7c'; // Your actual API key
+  const API_KEY = '47857c7c';
+
+  // ✅ Load favorites from localStorage on mount
+  useEffect(() => {
+    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setFavorites(storedFavorites);
+  }, []);
+
+  // ✅ Save favorites to localStorage when updated
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const fetchMovies = async (search) => {
     setLoading(true);
@@ -20,7 +31,6 @@ function Movies({ onSelect }) {
       const data = await response.json();
       
       if (data.Response === 'True') {
-        // Fetch detailed info for each movie
         const movieDetails = await Promise.all(
           data.Search.slice(0, 8).map(async (movie) => {
             const detailResponse = await fetch(
@@ -60,6 +70,17 @@ function Movies({ onSelect }) {
     const search = formData.get('search') || 'movie';
     if (search.trim()) {
       setSearchTerm(search);
+    }
+  };
+
+  // ✅ Add to favorites handler
+  const handleAddToFavorites = (movie) => {
+    const alreadyFavorite = favorites.find((fav) => fav.id === movie.id);
+    if (alreadyFavorite) {
+      alert('This movie is already in your favorites.');
+    } else {
+      setFavorites([...favorites, movie]);
+      alert(`${movie.title} added to favorites!`);
     }
   };
 
@@ -121,11 +142,15 @@ function Movies({ onSelect }) {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {movies.map((movie) => (
-          <MovieCard 
-            key={movie.id} 
-            movie={movie} 
-            onSelect={onSelect}
-          />
+          <div key={movie.id} className="relative">
+            <MovieCard movie={movie} onSelect={onSelect} />
+            <button
+              onClick={() => handleAddToFavorites(movie)}
+              className="absolute bottom-2 left-2 px-3 py-1 bg-pink-600 text-white text-sm rounded-md hover:bg-pink-700"
+            >
+              ❤️ Add to Favorites
+            </button>
+          </div>
         ))}
       </div>
 

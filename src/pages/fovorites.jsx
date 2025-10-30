@@ -1,110 +1,52 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import MovieCard from '../Components/MovieCard';
 
-
-function PopularMovies({ onSelect }) {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const API_KEY = '47857c7c'; // Your actual API key
-
-  // Pre-defined popular search terms
-  const popularSearches = ['avengers', 'batman', 'marvel', 'spiderman'];
+function Favorites() {
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
-    const fetchPopularMovies = async () => {
-      try {
-        setLoading(true);
-        const allMovies = [];
-        
-        for (const search of popularSearches.slice(0, 2)) {
-          const response = await fetch(
-            `https://www.omdbapi.com/?apikey=${API_KEY}&s=${search}&type=movie`
-          );
-          const data = await response.json();
-          
-          if (data.Response === 'True') {
-            // Get detailed info for each movie
-            const detailedMovies = await Promise.all(
-              data.Search.slice(0, 4).map(async (movie) => {
-                try {
-                  const detailResponse = await fetch(
-                    `https://www.omdbapi.com/?apikey=${API_KEY}&i=${movie.imdbID}`
-                  );
-                  const detailData = await detailResponse.json();
-                  return {
-                    id: movie.imdbID,
-                    title: movie.Title,
-                    year: movie.Year,
-                    genre: detailData.Genre || 'N/A',
-                    rating: detailData.imdbRating || 'N/A',
-                    poster: detailData.Poster !== 'N/A' ? detailData.Poster : 'https://via.placeholder.com/300x450/cccccc/666666?text=No+Poster'
-                  };
-                // eslint-disable-next-line no-unused-vars
-                } catch (err) {
-                  return {
-                    id: movie.imdbID,
-                    title: movie.Title,
-                    year: movie.Year,
-                    genre: 'Movie',
-                    rating: 'N/A',
-                    poster: movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450/cccccc/666666?text=No+Poster'
-                  };
-                }
-              })
-            );
-            allMovies.push(...detailedMovies);
-          }
-        }
-        
-        // Remove duplicates and limit to 8 movies
-        const uniqueMovies = allMovies.filter((movie, index, self) =>
-          index === self.findIndex(m => m.id === movie.id)
-        ).slice(0, 8);
-        
-        setMovies(uniqueMovies);
-      } catch (err) {
-        setError('Failed to load popular movies');
-        console.error('Error fetching popular movies:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPopularMovies();
+    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setFavorites(storedFavorites);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-lg">Loading popular movies...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-red-500 text-center">{error}</div>
-      </div>
-    );
-  }
+  const handleRemove = (id) => {
+    const updated = favorites.filter((movie) => movie.id !== id);
+    setFavorites(updated);
+    localStorage.setItem('favorites', JSON.stringify(updated));
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Popular Movies</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {movies.map((movie) => (
-          <MovieCard 
-            key={movie.id} 
-            movie={movie} 
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">My Favorites ❤️</h1>
+
+      {favorites.length === 0 ? (
+        <p className="text-gray-600 text-center">No favorite movies yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {favorites.map((movie) => (
+            <div key={movie.id} className="relative">
+              <MovieCard movie={movie} />
+              <button
+                onClick={() => handleRemove(movie.id)}
+                className="absolute bottom-2 left-2 px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
+              >
+                ❌ Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-export default PopularMovies;
+export default Favorites;
+
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default PopularMovies;
